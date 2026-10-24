@@ -16,11 +16,17 @@ import type { StoredDevice } from './types';
 
 /** How long adding a found device waits for the YouTube app to report its screen, in ms */
 const SCREEN_WAIT = 15_000;
+/** How long a video waits for the YouTube app to join the lounge, e.g. while the TV starts, in ms */
+const APP_WAIT = 30_000;
+/** The same for player commands */
+const COMMAND_WAIT = 5_000;
 
 class YouTubeRemote extends utils.Adapter {
     private registry!: Registry;
     private readonly sessions = new Map<string, YouTubeLounge>();
     private readonly videoInfo = new Map<string, VideoInfo | null>();
+    /** Per device the last video asked for, so an older one still waiting for the app is dropped */
+    private readonly lastTarget = new Map<string, number>();
     private foundDevices: DialDevice[] = [];
     private deviceManagement?: YouTubeDeviceManagement;
 
@@ -77,7 +83,9 @@ class YouTubeRemote extends utils.Adapter {
                 await this.registry.remove(id);
                 await this.delObjectAsync(id, { recursive: true });
             },
-            play: (id, target) => this.send(id, lounge => lounge.play(parseYouTubeTarget(target))),
+            play: async (id, target) => {
+                await this.playTarget(id, target);
+            },
         };
     }
 
@@ -126,18 +134,14 @@ class YouTubeRemote extends utils.Adapter {
             void this.setStateAsync(`${device.id}.volume`, volume, true);
             void this.setStateAsync(`${device.id}.muted`, muted, true);
         });
-        session.on('disconnected', () => void this.setStateAsync(`${device.id}.connected`, false, true));
-        session.on('error', (e: Error) => {
-            this.log.debug(`${device.name}: ${e.message}`);
-            void this.setStateAsync(`${device.id}.connected`, false, true);
-        });
+        session.on('screen', (online: boolean) => void this.setStateAsync(`${device.id}.connected`, online, true));
+        session.on('error', (e: Error) => this.log.debug(`${device.name}: ${e.message}`));
         this.sessions.set(device.id, session);
         session.subscribe();
     }
 
     private async onNowPlaying(device: StoredDevice, playing: NowPlaying | null): Promise<void> {
         const base = device.id;
-        await this.setStateAsync(`${base}.connected`, true, true);
         await this.syncToken(device);
         await this.setStateAsync(`${base}.state`, mediaStateOf(playing), true);
         await this.setStateAsync(`${base}.playerState`, playing?.state ?? -1, true);
@@ -179,15 +183,44 @@ class YouTubeRemote extends utils.Adapter {
         }
     }
 
-    private async send(id: string, action: (lounge: YouTubeLounge) => Promise<void>): Promise<void> {
+    /**
+     * Send when the YouTube app is in the lounge: Google takes commands without it too, and they get lost.
+     *
+     * @returns false if `stillWanted` says the command is out of date after waiting
+     */
+    private async send(
+        id: string,
+        action: (lounge: YouTubeLounge) => Promise<void>,
+        wait: number,
+        stillWanted: () => boolean = () => true,
+    ): Promise<boolean> {
         const lounge = this.sessions.get(id);
         const device = this.registry.find(id);
         if (!lounge || !device) {
             throw new Error(`Unknown device ${id}`);
         }
+        if (!(await lounge.waitForScreen(wait))) {
+            throw new Error('the YouTube app is not open');
+        }
+        if (!stillWanted()) {
+            return false;
+        }
         await action(lounge);
-        await this.setStateAsync(`${id}.connected`, true, true);
         await this.syncToken(device);
+        return true;
+    }
+
+    /** A video waits for the app as long as the TV may take to start; a newer one replaces it meanwhile */
+    private playTarget(id: string, target: string): Promise<boolean> {
+        const parsed = parseYouTubeTarget(target);
+        const call = (this.lastTarget.get(id) ?? 0) + 1;
+        this.lastTarget.set(id, call);
+        return this.send(
+            id,
+            lounge => lounge.play(parsed),
+            APP_WAIT,
+            () => this.lastTarget.get(id) === call,
+        );
     }
 
     private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
@@ -199,38 +232,38 @@ class YouTubeRemote extends utils.Adapter {
             return;
         }
         this.execute(deviceId, command, state.val)
-            .then(() => this.acknowledge(id, command, state.val))
+            .then(done => (done ? this.acknowledge(id, command, state.val) : undefined))
             .catch(e => this.log.warn(`${command} on ${this.registry.find(deviceId)?.name}: ${String(e)}`));
     }
 
-    private async execute(id: string, command: string, value: ioBroker.StateValue): Promise<void> {
+    /** @returns false if a newer command took its place, then the newer one is acknowledged */
+    private async execute(id: string, command: string, value: ioBroker.StateValue): Promise<boolean> {
         switch (command) {
             case 'youtube':
-                if (typeof value === 'string' && value.trim()) {
-                    await this.send(id, lounge => lounge.play(parseYouTubeTarget(value)));
-                }
-                return;
+                return typeof value === 'string' && value.trim() ? this.playTarget(id, value) : true;
             case 'play':
             case 'pause':
             case 'next':
             case 'prev':
                 if (value) {
-                    await this.send(id, lounge =>
-                        lounge.play({ kind: 'command', command: command === 'prev' ? 'previous' : command }),
+                    await this.send(
+                        id,
+                        lounge => lounge.play({ kind: 'command', command: command === 'prev' ? 'previous' : command }),
+                        COMMAND_WAIT,
                     );
                 }
-                return;
+                return true;
             case 'seek':
-                await this.send(id, lounge => lounge.seekTo(Number(value)));
-                return;
+                await this.send(id, lounge => lounge.seekTo(Number(value)), COMMAND_WAIT);
+                return true;
             case 'volume':
-                await this.send(id, lounge => lounge.setVolume(Number(value)));
-                return;
+                await this.send(id, lounge => lounge.setVolume(Number(value)), COMMAND_WAIT);
+                return true;
             case 'muted':
-                await this.send(id, lounge => lounge.setMuted(!!value));
-                return;
+                await this.send(id, lounge => lounge.setMuted(!!value), COMMAND_WAIT);
+                return true;
             default:
-                return;
+                return true;
         }
     }
 

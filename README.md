@@ -30,7 +30,10 @@ devices adapter show it as a player:
 | `duration`, `elapsed`           | media.*                  | length and position in seconds, as last reported by the TV                             |
 | `seek`                          | media.seek               | jump to a position in seconds                                                          |
 | `volume`, `muted`               | level.volume, media.mute | volume of the YouTube player                                                           |
-| `connected`                     | indicator.reachable      | the session to the YouTube app is up                                                   |
+| `connected`                     | indicator.reachable      | the YouTube app of the device is open                                                  |
+
+A video waits up to 30 s for the YouTube app, so it can be written right after switching the TV on; player commands
+wait 5 s. If the app does not come, `youtube` stays unacknowledged and a warning is logged.
 
 Handles (`@name`) cannot be resolved without the YouTube Data API: use the channel ID `UC…` from the address of the
 channel page.
