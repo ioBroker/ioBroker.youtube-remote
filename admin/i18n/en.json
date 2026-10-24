@@ -1,0 +1,9 @@
+{
+    "Cloud note": "Commands and what plays go over the YouTube Lounge API of Google (\"Link with TV\"), so an internet connection is needed. Google does not document this API; it may change.",
+    "Devices": "Devices",
+    "Devices help": "Search finds TVs and devices with the YouTube app in the network. Every device can also be paired with the TV code: in the YouTube app under Settings > Link with TV code.",
+    "Look up titles": "Look up title, channel and picture",
+    "Look up titles help": "One request to YouTube (oEmbed) per new video",
+    "Search time": "Search time",
+    "Settings": "Settings"
+}

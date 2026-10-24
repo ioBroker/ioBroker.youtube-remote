@@ -1,0 +1,9 @@
+{
+    "Cloud note": "Les commandes et l'état de lecture passent par l'API YouTube Lounge de Google (« Associer à la TV »), une connexion Internet est donc nécessaire. Google ne documente pas cette API ; elle peut changer.",
+    "Devices": "Appareils",
+    "Devices help": "La recherche trouve les téléviseurs et appareils avec l'application YouTube sur le réseau. Chaque appareil peut aussi être associé avec le code TV : dans l'application YouTube sous Paramètres > Associer avec le code TV.",
+    "Look up titles": "Rechercher titre, chaîne et image",
+    "Look up titles help": "Une requête à YouTube (oEmbed) par nouvelle vidéo",
+    "Search time": "Durée de recherche",
+    "Settings": "Paramètres"
+}

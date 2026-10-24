@@ -1,0 +1,53 @@
+{
+    i18n: true,
+    type: 'tabs',
+    items: {
+        devices: {
+            type: 'panel',
+            label: 'Devices',
+            items: {
+                _help: {
+                    type: 'infoBox',
+                    boxType: 'info',
+                    text: 'Devices help',
+                    xs: 12,
+                },
+                _manager: {
+                    type: 'deviceManager',
+                    xs: 12,
+                    style: { width: '100%', minHeight: 400 },
+                },
+            },
+        },
+        settings: {
+            type: 'panel',
+            label: 'Settings',
+            items: {
+                lookUpTitles: {
+                    type: 'checkbox',
+                    label: 'Look up titles',
+                    help: 'Look up titles help',
+                    default: true,
+                    xs: 12,
+                },
+                discoveryTimeout: {
+                    type: 'number',
+                    label: 'Search time',
+                    unit: 's',
+                    min: 1,
+                    max: 30,
+                    default: 4,
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                },
+                _cloud: {
+                    type: 'infoBox',
+                    boxType: 'warning',
+                    text: 'Cloud note',
+                    xs: 12,
+                },
+            },
+        },
+    },
+}

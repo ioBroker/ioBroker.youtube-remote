@@ -1,0 +1,9 @@
+{
+    "Cloud note": "Polecenia i stan odtwarzania przechodzą przez YouTube Lounge API Google („Połącz z TV”), dlatego potrzebne jest połączenie z internetem. Google nie dokumentuje tego API; może się ono zmienić.",
+    "Devices": "Urządzenia",
+    "Devices help": "Wyszukiwanie znajduje telewizory i urządzenia z aplikacją YouTube w sieci. Każde urządzenie można też sparować kodem TV: w aplikacji YouTube w Ustawienia > Połącz z kodem TV.",
+    "Look up titles": "Pobieraj tytuł, kanał i obraz",
+    "Look up titles help": "Jedno zapytanie do YouTube (oEmbed) na każdy nowy film",
+    "Search time": "Czas wyszukiwania",
+    "Settings": "Ustawienia"
+}

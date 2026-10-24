@@ -1,0 +1,9 @@
+{
+    "Cloud note": "I comandi e lo stato di riproduzione passano dalla YouTube Lounge API di Google (\"Collega alla TV\"), quindi serve una connessione Internet. Google non documenta questa API; potrebbe cambiare.",
+    "Devices": "Dispositivi",
+    "Devices help": "La ricerca trova TV e dispositivi con l'app YouTube nella rete. Ogni dispositivo può anche essere associato con il codice TV: nell'app YouTube in Impostazioni > Collega con codice TV.",
+    "Look up titles": "Recupera titolo, canale e immagine",
+    "Look up titles help": "Una richiesta a YouTube (oEmbed) per ogni nuovo video",
+    "Search time": "Durata della ricerca",
+    "Settings": "Impostazioni"
+}

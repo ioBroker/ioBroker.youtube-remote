@@ -1,0 +1,9 @@
+{
+    "Cloud note": "Opdrachten en de afspeelstatus lopen via de YouTube Lounge API van Google (\"Koppelen met tv\"), daarom is een internetverbinding nodig. Google documenteert deze API niet; hij kan veranderen.",
+    "Devices": "Apparaten",
+    "Devices help": "Zoeken vindt tv's en apparaten met de YouTube-app in het netwerk. Elk apparaat kan ook worden gekoppeld met de tv-code: in de YouTube-app onder Instellingen > Koppelen met tv-code.",
+    "Look up titles": "Titel, kanaal en afbeelding opvragen",
+    "Look up titles help": "Eén verzoek aan YouTube (oEmbed) per nieuwe video",
+    "Search time": "Zoektijd",
+    "Settings": "Instellingen"
+}

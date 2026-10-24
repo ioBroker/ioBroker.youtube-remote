@@ -1,0 +1,9 @@
+{
+    "Cloud note": "Befehle und der Abspielstatus laufen über die YouTube-Lounge-Schnittstelle von Google („Mit TV verknüpfen“), deshalb wird eine Internetverbindung gebraucht. Google dokumentiert diese Schnittstelle nicht; sie kann sich ändern.",
+    "Devices": "Geräte",
+    "Devices help": "Suchen findet Fernseher und Geräte mit der YouTube-App im Netzwerk. Jedes Gerät lässt sich auch mit dem TV-Code koppeln: in der YouTube-App unter Einstellungen > Mit TV-Code verknüpfen.",
+    "Look up titles": "Titel, Kanal und Bild abfragen",
+    "Look up titles help": "Eine Anfrage an YouTube (oEmbed) pro neuem Video",
+    "Search time": "Suchdauer",
+    "Settings": "Einstellungen"
+}

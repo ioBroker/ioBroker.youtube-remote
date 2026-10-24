@@ -1,0 +1,9 @@
+{
+    "Cloud note": "命令和播放状态通过 Google 的 YouTube Lounge API（“与电视关联”）传输，因此需要互联网连接。Google 未公开记录此 API，它可能会发生变化。",
+    "Devices": "设备",
+    "Devices help": "搜索会在网络中查找带有 YouTube 应用的电视和设备。每台设备也可以使用电视代码配对：在 YouTube 应用的“设置 > 使用电视代码关联”中。",
+    "Look up titles": "查询标题、频道和图片",
+    "Look up titles help": "每个新视频向 YouTube (oEmbed) 发送一次请求",
+    "Search time": "搜索时间",
+    "Settings": "设置"
+}
