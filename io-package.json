@@ -61,6 +61,7 @@
         "compact": true,
         "connectionType": "cloud",
         "dataSource": "push",
+        "nogit": true,
         "adminUI": {
             "config": "json"
         },

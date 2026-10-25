@@ -14,6 +14,9 @@ In the tab **Devices** of the settings:
   YouTube on the device once.
 - **Pair with TV code** works for every device: the YouTube app shows the code under **Settings** > **Link with TV code**.
 
+The card of a device shows whether the YouTube app is open, what plays (title, channel) and has buttons for previous,
+play, pause, next, the volume and mute. **More** shows the picture and the position of the video.
+
 ## States
 
 Per device `youtube-remote.0.<device>`, in the form of the type-detector type `mediaPlayer`, so visualizations and the
@@ -53,6 +56,11 @@ stored encrypted.
 ## Changelog
 
 ### **WORK IN PROGRESS**
+
+- (@GermanBluefox) Device cards show state, title and channel, with play, pause, next, previous, volume and mute
+- (@GermanBluefox) Commands wait for the YouTube app to open; `connected` shows whether it is open
+
+### 0.0.1 (2026-10-24)
 
 - (@GermanBluefox) Initial release
 

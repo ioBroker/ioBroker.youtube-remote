@@ -2,6 +2,8 @@ import type { AdapterInstance } from '@iobroker/adapter-core';
 import {
     DeviceManagement,
     type ActionContext,
+    type ControlState,
+    type DeviceControl,
     type DeviceDetails,
     type DeviceInfo,
     type DeviceLoadContext,
@@ -58,7 +60,28 @@ const T = {
     },
     paired: { en: 'Paired devices', de: 'Gekoppelte Geräte' },
     discovered: { en: 'Found devices', de: 'Gefundene Geräte' },
+    title: { en: 'Title', de: 'Titel' },
+    channel: { en: 'Channel', de: 'Kanal' },
+    previous: { en: 'Previous', de: 'Zurück' },
+    pause: { en: 'Pause', de: 'Pause' },
+    next: { en: 'Next', de: 'Weiter' },
+    volume: { en: 'Volume', de: 'Lautstärke' },
+    muted: { en: 'Muted', de: 'Stumm' },
+    playing: { en: 'Playing', de: 'Spielt' },
+    paused: { en: 'Paused', de: 'Pausiert' },
+    stopped: { en: 'Stopped', de: 'Gestoppt' },
+    position: { en: 'Position', de: 'Position' },
 };
+
+type StateResult = ioBroker.State | { error: { code: number; message: string } };
+
+/** `m:ss` or `h:mm:ss` */
+function duration(seconds: unknown): string {
+    const total = Math.max(0, Math.round(Number(seconds) || 0));
+    const [h, m, sec] = [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60];
+    const two = (n: number): string => String(n).padStart(2, '0');
+    return h ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
+}
 
 function withError(text: Text, error: unknown): Text {
     const message = error instanceof Error ? error.message : String(error);
@@ -115,6 +138,21 @@ export class YouTubeDeviceManagement extends DeviceManagement {
                     mapping: { true: 'connected', false: 'disconnected' },
                 },
             },
+            indicators: [
+                {
+                    id: 'state',
+                    value: { stateId: `${namespace}.${device.id}.state` },
+                    levels: [
+                        { value: 1, icon: 'play', color: 'ok', text: T.playing },
+                        { value: 0, icon: 'pause', color: 'warning', text: T.paused },
+                        { icon: 'stop', color: 'inactive', text: T.stopped },
+                    ],
+                    hideIfEmpty: false,
+                    order: 1,
+                },
+            ],
+            controls: this.controlsOf(device.id),
+            hasDetails: true,
             actions: [
                 { id: 'play', icon: 'play', description: T.play, handler: (id, ctx) => this.play(id, ctx) },
                 { id: 'rename', icon: 'rename', description: T.rename, handler: (id, ctx) => this.rename(id, ctx) },
@@ -155,17 +193,100 @@ export class YouTubeDeviceManagement extends DeviceManagement {
         devices.forEach(device => context.addDevice(device));
     }
 
-    override getDeviceDetails(id: string): DeviceDetails<string> | null {
+    /**
+     * Title and channel live on the card, the player buttons, volume and mute. They write the states of the device,
+     * so they work like a script writing them.
+     */
+    private controlsOf(id: string): DeviceControl<string>[] {
+        const base = `${this.adapter.namespace}.${id}`;
+        const handler = async (_deviceId: string, control: string, value: ControlState): Promise<StateResult> => {
+            try {
+                await this.adapter.setForeignStateAsync(`${base}.${control}`, value, false);
+            } catch (error) {
+                return { error: { code: 500, message: error instanceof Error ? error.message : String(error) } };
+            }
+            return { val: value, ack: true, ts: Date.now(), lc: Date.now(), from: this.adapter.namespace };
+        };
+        const getStateHandler = async (_deviceId: string, control: string): Promise<StateResult> =>
+            (await this.adapter.getForeignStateAsync(`${base}.${control}`)) ?? {
+                val: null,
+                ack: true,
+                ts: Date.now(),
+                lc: Date.now(),
+                from: this.adapter.namespace,
+            };
+        const button = (control: string, icon: string, label: Text): DeviceControl<string> => ({
+            id: control,
+            type: 'button',
+            icon,
+            label,
+            handler: (deviceId: string, controlId: string) => handler(deviceId, controlId, true),
+        });
+        const controls: DeviceControl<string>[] = [
+            { id: 'title', type: 'info', label: T.title, stateId: `${base}.title`, noTranslation: true },
+            { id: 'artist', type: 'info', label: T.channel, stateId: `${base}.artist`, noTranslation: true },
+            button('prev', 'previous', T.previous),
+            button('play', 'play', T.play),
+            button('pause', 'pause', T.pause),
+            button('next', 'next', T.next),
+            {
+                id: 'volume',
+                type: 'slider',
+                label: T.volume,
+                stateId: `${base}.volume`,
+                min: 0,
+                max: 100,
+                step: 1,
+                unit: '%',
+                controlDelay: 500,
+                handler,
+            },
+            { id: 'muted', type: 'switch', label: T.muted, stateId: `${base}.muted`, handler },
+        ];
+        return controls.map(control => ({ ...control, getStateHandler }));
+    }
+
+    override async getDeviceDetails(id: string): Promise<DeviceDetails<string> | null> {
         const device = this.service.devices().find(entry => entry.id === id);
-        return device
-            ? {
-                  id,
-                  schema: {
-                      type: 'panel',
-                      items: { name: { type: 'staticInfo', label: T.name, data: device.name } },
-                  },
-              }
-            : null;
+        if (!device) {
+            return null;
+        }
+        const base = `${this.adapter.namespace}.${id}`;
+        const value = async (state: string): Promise<ioBroker.StateValue> =>
+            (await this.adapter.getForeignStateAsync(`${base}.${state}`))?.val ?? null;
+        const [title, artist, url, cover, elapsed, length] = await Promise.all(
+            ['title', 'artist', 'url', 'cover', 'elapsed', 'duration'].map(value),
+        );
+        return {
+            id,
+            schema: {
+                type: 'panel',
+                items: {
+                    name: { type: 'staticInfo', label: T.name, data: device.name, xs: 12 },
+                    title: { type: 'staticInfo', label: T.title, data: String(title || '-'), xs: 12 },
+                    artist: { type: 'staticInfo', label: T.channel, data: String(artist || '-'), xs: 12 },
+                    position: {
+                        type: 'staticInfo',
+                        label: T.position,
+                        data: length ? `${duration(elapsed)} / ${duration(length)}` : '-',
+                        xs: 12,
+                    },
+                    // a click on the picture opens the video
+                    ...(cover
+                        ? {
+                              cover: {
+                                  type: 'staticImage',
+                                  src: String(cover),
+                                  href: url ? String(url) : undefined,
+                                  xs: 12,
+                                  sm: 8,
+                                  md: 6,
+                              },
+                          }
+                        : {}),
+                },
+            },
+        };
     }
 
     private async discover(context: ActionContext): Promise<InstanceRefreshResponse> {
