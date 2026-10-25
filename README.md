@@ -12,25 +12,25 @@ In the tab **Devices** of the settings:
 - **Search** finds devices with the YouTube app in the network (DIAL). **Add** pairs a found device; it reports
   its YouTube screen mostly only while the app runs, so the adapter tries to start it - if that does not work, open
   YouTube on the device once.
-- **Pair with TV code** works for every device: the YouTube app shows the code under Settings > Link with TV code.
+- **Pair with TV code** works for every device: the YouTube app shows the code under **Settings** > **Link with TV code**.
 
 ## States
 
 Per device `youtube-remote.0.<device>`, in the form of the type-detector type `mediaPlayer`, so visualizations and the
 devices adapter show it as a player:
 
-| State                           | Role                     | Description                                                                            |
-| ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
-| `youtube`                       | text                     | play a video ID, a playlist (`PL…`), the uploads of a channel (`UC…`) or a YouTube URL |
-| `play`, `pause`, `next`, `prev` | button.*                 | player commands                                                                        |
-| `state`                         | media.state              | 0 pause, 1 play, 2 stop                                                                |
-| `playerState`                   | value                    | unstarted, ended, playing, paused, buffering, cued, advertisement                      |
-| `title`, `artist`, `cover`      | media.*                  | title, channel and picture of the video (oEmbed of YouTube, can be switched off)       |
-| `videoId`, `url`                | text                     | the playing video                                                                      |
-| `duration`, `elapsed`           | media.*                  | length and position in seconds, as last reported by the TV                             |
-| `seek`                          | media.seek               | jump to a position in seconds                                                          |
-| `volume`, `muted`               | level.volume, media.mute | volume of the YouTube player                                                           |
-| `connected`                     | indicator.reachable      | the YouTube app of the device is open                                                  |
+| State                            | Role                      | Description                                                                             |
+|----------------------------------|---------------------------|-----------------------------------------------------------------------------------------|
+| `youtube`                        | text                      | play a video ID, a playlist (`PL…`), the uploads of a channel (`UC…`) or a YouTube URL  |
+| `play`, `pause`, `next`, `prev`  | button.*                  | player commands                                                                         |
+| `state`                          | media.state               | 0 pause, 1 play, 2 stop                                                                 |
+| `playerState`                    | value                     | unstarted, ended, playing, paused, buffering, cued, advertisement                       |
+| `title`, `artist`, `cover`       | media.*                   | title, channel and picture of the video (oEmbed of YouTube, can be switched off)        |
+| `videoId`, `url`                 | text                      | the playing video                                                                       |
+| `duration`, `elapsed`            | media.*                   | length and position in seconds, as last reported by the TV                              |
+| `seek`                           | media.seek                | jump to a position in seconds                                                           |
+| `volume`, `muted`                | level.volume, media.mute  | volume of the YouTube player                                                            |
+| `connected`                      | indicator.reachable       | the YouTube app of the device is open                                                   |
 
 A video waits up to 30 s for the YouTube app, so it can be written right after switching the TV on; player commands
 wait 5 s. If the app does not come, `youtube` stays unacknowledged and a warning is logged.
