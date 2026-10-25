@@ -1,67 +1,67 @@
 {
-    "name": "iobroker.youtube-remote",
-    "version": "0.0.1",
-    "description": "Control the YouTube app of TVs, Android TV, Fire TV and consoles: play videos, playlists and channels, follow what plays",
-    "author": {
-        "name": "bluefox",
-        "email": "dogafox@gmail.com"
-    },
-    "homepage": "https://github.com/ioBroker/ioBroker.youtube-remote",
-    "license": "MIT",
-    "keywords": [
-        "ioBroker",
-        "youtube",
-        "tv",
-        "lounge",
-        "dial",
-        "media"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ioBroker/ioBroker.youtube-remote.git"
-    },
-    "engines": {
-        "node": ">=22"
-    },
-    "main": "build/main.js",
-    "files": [
-        "admin/",
-        "build/",
-        "!build/**/*.map",
-        "!build/**/*.test.*",
-        "io-package.json",
-        "package.json",
-        "README.md",
-        "LICENSE"
-    ],
-    "dependencies": {
-        "@iobroker/adapter-core": "^3.4.3",
-        "@iobroker/dm-utils": "^3.2.1",
-        "@iobroker/youtube-lounge": "^0.2.0"
-    },
-    "devDependencies": {
-        "@alcalzone/release-script": "^5.2.1",
-        "@alcalzone/release-script-plugin-iobroker": "^5.2.0",
-        "@alcalzone/release-script-plugin-license": "^5.2.2",
-        "@alcalzone/release-script-plugin-manual-review": "^5.2.0",
-        "@iobroker/adapter-dev": "^1.5.0",
-        "@iobroker/eslint-config": "^2.3.4",
-        "@iobroker/testing": "^6.3.0",
-        "@tsconfig/node22": "^22.0.6",
-        "@types/node": "^22.20.5",
-        "globals": "^17.13.0",
-        "typescript": "~5.9.3"
-    },
-    "scripts": {
-        "build": "tsc -p tsconfig.build.json",
-        "check": "tsc -p tsconfig.json --noEmit",
-        "pretest": "npm run build",
-        "test:unit": "node scripts/run-mocha.js --config test/mocharc.custom.json \"build/**/*.test.js\" --exit",
-        "test:package": "node scripts/run-mocha.js test/package --exit",
-        "test:integration": "node scripts/run-mocha.js test/integration --exit",
-        "test": "npm run test:unit && npm run test:package",
-        "lint": "eslint -c eslint.config.mjs .",
-        "translate": "translate-adapter",
-        "release": "release-script"
-    }
+  "name": "iobroker.youtube-remote",
+  "version": "0.0.2",
+  "description": "Control the YouTube app of TVs, Android TV, Fire TV and consoles: play videos, playlists and channels, follow what plays",
+  "author": {
+    "name": "bluefox",
+    "email": "dogafox@gmail.com"
+  },
+  "homepage": "https://github.com/ioBroker/ioBroker.youtube-remote",
+  "license": "MIT",
+  "keywords": [
+    "ioBroker",
+    "youtube",
+    "tv",
+    "lounge",
+    "dial",
+    "media"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ioBroker/ioBroker.youtube-remote.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "build/main.js",
+  "files": [
+    "admin/",
+    "build/",
+    "!build/**/*.map",
+    "!build/**/*.test.*",
+    "io-package.json",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.4.3",
+    "@iobroker/dm-utils": "^3.2.1",
+    "@iobroker/youtube-lounge": "^0.2.0"
+  },
+  "devDependencies": {
+    "@alcalzone/release-script": "^5.2.1",
+    "@alcalzone/release-script-plugin-iobroker": "^5.2.0",
+    "@alcalzone/release-script-plugin-license": "^5.2.2",
+    "@alcalzone/release-script-plugin-manual-review": "^5.2.0",
+    "@iobroker/adapter-dev": "^1.5.0",
+    "@iobroker/eslint-config": "^2.3.4",
+    "@iobroker/testing": "^6.3.0",
+    "@tsconfig/node22": "^22.0.6",
+    "@types/node": "^22.20.5",
+    "globals": "^17.13.0",
+    "typescript": "~5.9.3"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "pretest": "npm run build",
+    "test:unit": "node scripts/run-mocha.js --config test/mocharc.custom.json \"build/**/*.test.js\" --exit",
+    "test:package": "node scripts/run-mocha.js test/package --exit",
+    "test:integration": "node scripts/run-mocha.js test/integration --exit",
+    "test": "npm run test:unit && npm run test:package",
+    "lint": "eslint -c eslint.config.mjs .",
+    "translate": "translate-adapter",
+    "release": "release-script"
+  }
 }

@@ -54,8 +54,7 @@ stored encrypted.
 -->
 
 ## Changelog
-
-### **WORK IN PROGRESS**
+### 0.0.2 (2026-10-25)
 
 - (@GermanBluefox) Device cards show state, title and channel, with play, pause, next, previous, volume and mute
 - (@GermanBluefox) Commands wait for the YouTube app to open; `connected` shows whether it is open

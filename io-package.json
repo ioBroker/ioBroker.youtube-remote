@@ -1,110 +1,131 @@
 {
-    "common": {
-        "name": "youtube-remote",
-        "version": "0.0.1",
-        "news": {
-            "0.0.1": {
-                "en": "initial release",
-                "de": "Erste Version",
-                "ru": "Первый выпуск",
-                "pt": "Lançamento inicial",
-                "nl": "Eerste release",
-                "fr": "Version initiale",
-                "it": "Prima versione",
-                "es": "Versión inicial",
-                "pl": "Pierwsze wydanie",
-                "uk": "Перший випуск",
-                "zh-cn": "首次发布"
-            }
-        },
-        "titleLang": {
-            "en": "YouTube remote",
-            "de": "YouTube-Fernbedienung",
-            "ru": "Пульт YouTube",
-            "pt": "Controle remoto do YouTube",
-            "nl": "YouTube-afstandsbediening",
-            "fr": "Télécommande YouTube",
-            "it": "Telecomando YouTube",
-            "es": "Mando de YouTube",
-            "pl": "Pilot YouTube",
-            "uk": "Пульт YouTube",
-            "zh-cn": "YouTube 遥控器"
-        },
-        "desc": {
-            "en": "Controls the YouTube app of TVs, Android TV, Fire TV and consoles: plays videos, playlists and channels and shows what plays",
-            "de": "Steuert die YouTube-App von Fernsehern, Android TV, Fire TV und Konsolen: spielt Videos, Playlists und Kanäle ab und zeigt, was läuft",
-            "ru": "Управляет приложением YouTube на телевизорах, Android TV, Fire TV и консолях: воспроизводит видео, плейлисты и каналы и показывает, что играет",
-            "pt": "Controla o app YouTube de TVs, Android TV, Fire TV e consoles: reproduz vídeos, playlists e canais e mostra o que está tocando",
-            "nl": "Bedient de YouTube-app van tv's, Android TV, Fire TV en consoles: speelt video's, afspeellijsten en kanalen af en toont wat er speelt",
-            "fr": "Commande l'application YouTube des téléviseurs, Android TV, Fire TV et consoles : lit des vidéos, playlists et chaînes et affiche ce qui est lu",
-            "it": "Controlla l'app YouTube di TV, Android TV, Fire TV e console: riproduce video, playlist e canali e mostra cosa è in riproduzione",
-            "es": "Controla la app de YouTube de televisores, Android TV, Fire TV y consolas: reproduce vídeos, listas y canales y muestra lo que suena",
-            "pl": "Steruje aplikacją YouTube na telewizorach, Android TV, Fire TV i konsolach: odtwarza filmy, playlisty i kanały oraz pokazuje, co jest odtwarzane",
-            "uk": "Керує застосунком YouTube на телевізорах, Android TV, Fire TV і консолях: відтворює відео, плейлисти й канали та показує, що грає",
-            "zh-cn": "控制电视、Android TV、Fire TV 和游戏机上的 YouTube 应用：播放视频、播放列表和频道，并显示正在播放的内容"
-        },
-        "authors": ["bluefox <dogafox@gmail.com>"],
-        "keywords": ["youtube", "tv", "lounge", "dial", "media"],
-        "licenseInformation": {
-            "type": "free",
-            "license": "MIT"
-        },
-        "platform": "Javascript/Node.js",
-        "icon": "youtube-remote.svg",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/ioBroker/ioBroker.youtube-remote/main/admin/youtube-remote.svg",
-        "readme": "https://github.com/ioBroker/ioBroker.youtube-remote/blob/main/README.md",
-        "loglevel": "info",
-        "tier": 2,
-        "mode": "daemon",
-        "type": "multimedia",
-        "compact": true,
-        "connectionType": "cloud",
-        "dataSource": "push",
-        "nogit": true,
-        "adminUI": {
-            "config": "json"
-        },
-        "supportedMessages": {
-            "deviceManager": true
-        },
-        "dependencies": [
-            {
-                "js-controller": ">=6.0.11"
-            }
-        ],
-        "globalDependencies": [
-            {
-                "admin": ">=7.8.23"
-            }
-        ]
+  "common": {
+    "name": "youtube-remote",
+    "version": "0.0.2",
+    "news": {
+      "0.0.2": {
+        "en": "Device cards show state, title and channel, with play, pause, next, previous, volume and mute\nCommands wait for the YouTube app to open; `connected` shows whether it is open",
+        "de": "Gerätekarten zeigen Status, Titel und Kanal mit Abspielen, Pause, Zurück, Lautstärke und Stumm\nBefehle warten auf den Start der YouTube-App; `connected` zeigt, ob sie geöffnet ist",
+        "ru": "На карточках устройства отображаются состояние, название и канал, а также воспроизведение, пауза, следующее, предыдущее, громкое и отключенное\nКоманды дожидаются открытия приложения YouTube; `connected` показывает, открыто ли оно",
+        "pt": "As placas mostram estado, título e canal, com play, pause, next, previous, volume e mute\nComandos aguardam o app do YouTube abrir; `conect` mostra se está aberto",
+        "nl": "Apparaatkaarten tonen status, titel en kanaal, met afspelen, pauzeren, volgende, vorige, volume en dempen\nOpdrachten wachten tot de YouTube-app wordt geopend; met `connected` wordt weergegeven of de app is geopend",
+        "fr": "Les cartes indiquent l'état, le titre et la chaîne, avec lecture, pause, suivant, volume et sourdine\nLes commandes attendent l'ouverture de l'app YouTube ; « Connected » indique si elle est ouverte",
+        "it": "Le schede mostrano stato, titolo e canale, con play, pausa, next, previous, volume e mute\nI comandi attendono l'app YouTube; `connesso` mostra se è aperta",
+        "es": "Las tarjetas muestran el estado, el título y el canal, con reproducir, pausar, siguiente, anterior, volumen y silencio\nLos comandos esperan a que se abra la aplicación YouTube; «conectado» muestra si está abierta",
+        "pl": "Karty urządzeń pokazują stan, tytuł i kanał, z odtwarzaniem, pauzą, następną, poprzednią, głośnością i wyciszaniem\nPolecenia czekają na otwarcie aplikacji YouTube; `connected` pokazuje, czy jest otwarta",
+        "uk": "Картки пристроїв показують стан, назву та канал, з відтворенням, паузою, наступним, попереднім, гучністю та вимкненням звуку\nКоманди чекають відкриття програми YouTube; `connected` показує, чи відкрито воно",
+        "zh-cn": "设备卡片显示状态、标题和频道，包括播放、暂停、下一首、上一首、音量和静音\n命令等待 YouTube 应用打开；`connected` 显示它是否已打开"
+      },
+      "0.0.1": {
+        "en": "initial release",
+        "de": "Erste Version",
+        "ru": "Первый выпуск",
+        "pt": "Lançamento inicial",
+        "nl": "Eerste release",
+        "fr": "Version initiale",
+        "it": "Prima versione",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "uk": "Перший випуск",
+        "zh-cn": "首次发布"
+      }
     },
-    "native": {
-        "lookUpTitles": true,
-        "discoveryTimeout": 4
+    "titleLang": {
+      "en": "YouTube remote",
+      "de": "YouTube-Fernbedienung",
+      "ru": "Пульт YouTube",
+      "pt": "Controle remoto do YouTube",
+      "nl": "YouTube-afstandsbediening",
+      "fr": "Télécommande YouTube",
+      "it": "Telecomando YouTube",
+      "es": "Mando de YouTube",
+      "pl": "Pilot YouTube",
+      "uk": "Пульт YouTube",
+      "zh-cn": "YouTube 遥控器"
     },
-    "objects": [],
-    "instanceObjects": [
-        {
-            "_id": "info",
-            "type": "channel",
-            "common": {
-                "name": "Information"
-            },
-            "native": {}
-        },
-        {
-            "_id": "info.deviceManager",
-            "type": "state",
-            "common": {
-                "name": "Device Manager communication",
-                "type": "string",
-                "role": "json",
-                "read": true,
-                "write": false,
-                "expert": true
-            },
-            "native": {}
-        }
+    "desc": {
+      "en": "Controls the YouTube app of TVs, Android TV, Fire TV and consoles: plays videos, playlists and channels and shows what plays",
+      "de": "Steuert die YouTube-App von Fernsehern, Android TV, Fire TV und Konsolen: spielt Videos, Playlists und Kanäle ab und zeigt, was läuft",
+      "ru": "Управляет приложением YouTube на телевизорах, Android TV, Fire TV и консолях: воспроизводит видео, плейлисты и каналы и показывает, что играет",
+      "pt": "Controla o app YouTube de TVs, Android TV, Fire TV e consoles: reproduz vídeos, playlists e canais e mostra o que está tocando",
+      "nl": "Bedient de YouTube-app van tv's, Android TV, Fire TV en consoles: speelt video's, afspeellijsten en kanalen af en toont wat er speelt",
+      "fr": "Commande l'application YouTube des téléviseurs, Android TV, Fire TV et consoles : lit des vidéos, playlists et chaînes et affiche ce qui est lu",
+      "it": "Controlla l'app YouTube di TV, Android TV, Fire TV e console: riproduce video, playlist e canali e mostra cosa è in riproduzione",
+      "es": "Controla la app de YouTube de televisores, Android TV, Fire TV y consolas: reproduce vídeos, listas y canales y muestra lo que suena",
+      "pl": "Steruje aplikacją YouTube na telewizorach, Android TV, Fire TV i konsolach: odtwarza filmy, playlisty i kanały oraz pokazuje, co jest odtwarzane",
+      "uk": "Керує застосунком YouTube на телевізорах, Android TV, Fire TV і консолях: відтворює відео, плейлисти й канали та показує, що грає",
+      "zh-cn": "控制电视、Android TV、Fire TV 和游戏机上的 YouTube 应用：播放视频、播放列表和频道，并显示正在播放的内容"
+    },
+    "authors": [
+      "bluefox <dogafox@gmail.com>"
+    ],
+    "keywords": [
+      "youtube",
+      "tv",
+      "lounge",
+      "dial",
+      "media"
+    ],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "youtube-remote.svg",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/ioBroker/ioBroker.youtube-remote/main/admin/youtube-remote.svg",
+    "readme": "https://github.com/ioBroker/ioBroker.youtube-remote/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 2,
+    "mode": "daemon",
+    "type": "multimedia",
+    "compact": true,
+    "connectionType": "cloud",
+    "dataSource": "push",
+    "nogit": true,
+    "adminUI": {
+      "config": "json"
+    },
+    "supportedMessages": {
+      "deviceManager": true
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.8.23"
+      }
     ]
+  },
+  "native": {
+    "lookUpTitles": true,
+    "discoveryTimeout": 4
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.deviceManager",
+      "type": "state",
+      "common": {
+        "name": "Device Manager communication",
+        "type": "string",
+        "role": "json",
+        "read": true,
+        "write": false,
+        "expert": true
+      },
+      "native": {}
+    }
+  ]
 }
