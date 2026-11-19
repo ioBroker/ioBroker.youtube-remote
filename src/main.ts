@@ -10,6 +10,7 @@ import {
     parseYouTubeTarget,
 } from '@iobroker/youtube-lounge';
 import { YouTubeDeviceManagement, type YouTubeService } from './lib/DeviceManagement';
+import { COMMANDS, HELP } from './lib/help';
 import { MEDIA_STATES, PLAYER_STATES, type VideoInfo, lookUpVideo, mediaStateOf } from './lib/playerStates';
 import { Registry } from './lib/registry';
 import type { StoredDevice } from './types';
@@ -34,6 +35,7 @@ class YouTubeRemote extends utils.Adapter {
         super({ ...options, name: 'youtube-remote' });
         this.on('ready', () => this.onReady());
         this.on('stateChange', (id, state) => this.onStateChange(id, state));
+        this.on('message', obj => this.onMessage(obj));
         this.on('unload', callback => this.onUnload(callback));
     }
 
@@ -50,6 +52,16 @@ class YouTubeRemote extends utils.Adapter {
             this.startSession(device);
         }
         await this.subscribeStatesAsync('*');
+    }
+
+    /** Only `help`: the Device Manager answers its `dm:` commands itself */
+    private onMessage(obj: ioBroker.Message): void {
+        if (obj?.command === 'help') {
+            // A description of the adapter and its states for AI agents and script authors
+            if (obj.callback) {
+                this.sendTo(obj.from, obj.command, { help: HELP, commands: COMMANDS }, obj.callback);
+            }
+        }
     }
 
     private onUnload(callback: () => void): void {

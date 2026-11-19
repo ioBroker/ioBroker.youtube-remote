@@ -41,6 +41,12 @@ wait 5 s. If the app does not come, `youtube` stays unacknowledged and a warning
 Handles (`@name`) cannot be resolved without the YouTube Data API: use the channel ID `UC…` from the address of the
 channel page.
 
+## Messages for scripts and AI agents
+
+`sendTo('youtube-remote.0', 'help', {})` answers `{ help, commands }`: a description of the devices, the states to
+write and what they show, for AI agents (e.g. ioBroker.pi-agent) and script authors. `commands` lists every message
+the instance answers (also the ones of the Device Manager) with `write: true` for the ones that change something.
+
 ## Note
 
 Commands and what plays go over the YouTube Lounge API of Google ("Link with TV") with
@@ -54,6 +60,10 @@ stored encrypted.
 -->
 
 ## Changelog
+### **WORK IN PROGRESS**
+
+- (@GermanBluefox) Added the message "help": a description of the states and messages for AI agents (e.g. pi-agent), and common.supportedMessages.help
+
 ### 0.0.2 (2026-10-25)
 
 - (@GermanBluefox) Device cards show state, title and channel, with play, pause, next, previous, volume and mute
