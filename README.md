@@ -60,7 +60,7 @@ stored encrypted.
 -->
 
 ## Changelog
-### **WORK IN PROGRESS**
+### 0.1.0 (2026-11-19)
 
 - (@GermanBluefox) Added the message "help": a description of the states and messages for AI agents (e.g. pi-agent), and common.supportedMessages.help
 

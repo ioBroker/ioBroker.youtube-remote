@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "youtube-remote",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "news": {
+      "0.1.0": {
+        "en": "Added the message \"help\": a description of the states and messages for AI agents (e.g. pi-agent), and common.supportedMessages.help",
+        "de": "Nachricht „help“ hinzugefügt: Status und Meldungen für KI-Agenten (z. B. pi-agent) und common.supportedMessages.Help",
+        "ru": "Добавлено сообщение «help»: описание состояний и сообщений агентов искусственного интеллекта (например, pi-agent) и common.supportedMessages.help",
+        "pt": "Foi adicionada a mensagem “help”: uma descrição dos estados e mensagens dos agentes de IA (p. ex. pi-agent) e common.supportedMessages.help",
+        "nl": "Het bericht „help” toegevoegd: een beschrijving van de staten en berichten voor AI-agenten (bijv. pi-agent) en Common.SupportedMessages.help",
+        "fr": "Ajout du message « help » : description des états et des messages des agents IA (p.ex. pi-agent) et common.supportedMessages.help",
+        "it": "Aggiunto «help»: descrizione degli stati e dei messaggi per gli agenti AI (ad es. pi-agent) e common.supportedmessages.help",
+        "es": "Añadió el mensaje «help»: una descripción de los estados y mensajes de los agentes de IA (p. ej. pi-agent) y common.SupportedMessages.Help",
+        "pl": "Dodano komunikat „help”: opis stanów i komunikatów dla agentów AI (np. agenta pi-agenta) oraz common.supportedMessages.help",
+        "uk": "Додано повідомлення «help»: опис станів та повідомлень для агентів AI (наприклад, pi-agent) та Common.supportedMessages.help",
+        "zh-cn": "添加了 “帮助” 消息：对 AI 代理（例如 pi-agent）的状态和消息的描述，以及 common.supportedMessages.Help"
+      },
       "0.0.2": {
         "en": "Device cards show state, title and channel, with play, pause, next, previous, volume and mute\nCommands wait for the YouTube app to open; `connected` shows whether it is open",
         "de": "Gerätekarten zeigen Status, Titel und Kanal mit Abspielen, Pause, Zurück, Lautstärke und Stumm\nBefehle warten auf den Start der YouTube-App; `connected` zeigt, ob sie geöffnet ist",
