@@ -13,6 +13,15 @@ import { YouTubeDeviceManagement, type YouTubeService } from './lib/DeviceManage
 import { COMMANDS, HELP } from './lib/help';
 import { MEDIA_STATES, PLAYER_STATES, type VideoInfo, lookUpVideo, mediaStateOf } from './lib/playerStates';
 import { Registry } from './lib/registry';
+import {
+    MAX_RESULTS,
+    type SearchResult,
+    type SearchType,
+    firstHit,
+    resolveTarget,
+    searchYouTube,
+    withFirstVideo,
+} from './lib/search';
 import type { StoredDevice } from './types';
 
 /** How long adding a found device waits for the YouTube app to report its screen, in ms */
@@ -32,7 +41,8 @@ class YouTubeRemote extends utils.Adapter {
     private deviceManagement?: YouTubeDeviceManagement;
 
     constructor(options: Partial<utils.AdapterOptions> = {}) {
-        super({ ...options, name: 'youtube-remote' });
+        // useFormatDate: js-controller reads system.config and sets this.language (for the texts of search results)
+        super({ ...options, name: 'youtube-remote', useFormatDate: true });
         this.on('ready', () => this.onReady());
         this.on('stateChange', (id, state) => this.onStateChange(id, state));
         this.on('message', obj => this.onMessage(obj));
@@ -54,14 +64,37 @@ class YouTubeRemote extends utils.Adapter {
         await this.subscribeStatesAsync('*');
     }
 
-    /** Only `help`: the Device Manager answers its `dm:` commands itself */
+    /** `help` and `search`: the Device Manager answers its `dm:` commands itself */
     private onMessage(obj: ioBroker.Message): void {
-        if (obj?.command === 'help') {
-            // A description of the adapter and its states for AI agents and script authors
-            if (obj.callback) {
-                this.sendTo(obj.from, obj.command, { help: HELP, commands: COMMANDS }, obj.callback);
-            }
+        if (!obj?.callback) {
+            return;
         }
+        if (obj.command === 'help') {
+            // A description of the adapter and its states for AI agents and script authors
+            this.sendTo(obj.from, obj.command, { help: HELP, commands: COMMANDS }, obj.callback);
+        } else if (obj.command === 'search') {
+            // "Sailing Oceanaire" or {query, type, limit}
+            const message = (typeof obj.message === 'string' ? { query: obj.message } : (obj.message ?? {})) as {
+                query?: string;
+                type?: SearchType;
+                limit?: number;
+            };
+            const query = String(message.query ?? '').trim();
+            this.search(query, message.type, message.limit).then(
+                results => this.sendTo(obj.from, obj.command, { query, results }, obj.callback),
+                (e: unknown) =>
+                    this.sendTo(
+                        obj.from,
+                        obj.command,
+                        { query, error: e instanceof Error ? e.message : String(e) },
+                        obj.callback,
+                    ),
+            );
+        }
+    }
+
+    private search(query: string, type?: SearchType, limit?: number): Promise<SearchResult[]> {
+        return searchYouTube(query, { type, limit, language: this.language });
     }
 
     private onUnload(callback: () => void): void {
@@ -96,8 +129,9 @@ class YouTubeRemote extends utils.Adapter {
                 await this.delObjectAsync(id, { recursive: true });
             },
             play: async (id, target) => {
-                await this.playTarget(id, target);
+                await this.playText(id, target);
             },
+            search: query => this.search(query, 'all', MAX_RESULTS),
         };
     }
 
@@ -222,17 +256,43 @@ class YouTubeRemote extends utils.Adapter {
         return true;
     }
 
-    /** A video waits for the app as long as the TV may take to start; a newer one replaces it meanwhile */
-    private playTarget(id: string, target: string): Promise<boolean> {
-        const parsed = parseYouTubeTarget(target);
+    /** Count a new video for the device: it replaces the ones still waiting */
+    private nextTarget(id: string): number {
         const call = (this.lastTarget.get(id) ?? 0) + 1;
         this.lastTarget.set(id, call);
+        return call;
+    }
+
+    /** A video waits for the app as long as the TV may take to start; a newer one replaces it meanwhile */
+    private playTarget(id: string, target: string, call?: number): Promise<boolean> {
+        const parsed = parseYouTubeTarget(target);
+        const current = call ?? this.nextTarget(id);
         return this.send(
             id,
             lounge => lounge.play(parsed),
             APP_WAIT,
-            () => this.lastTarget.get(id) === call,
+            () => this.lastTarget.get(id) === current,
         );
+    }
+
+    /**
+     * Play what a text means: an ID, URL or command as it is, a handle (`@name`, youtube.com/@name) as the uploads of
+     * its channel, other words as the first hit YouTube finds (a channel if they name one, else mostly a video); with
+     * `alwaysSearch` (state `search`) always the first hit. A video asked for while it is looked up replaces it.
+     */
+    private async playText(id: string, text: string, alwaysSearch = false): Promise<boolean> {
+        const call = this.nextTarget(id);
+        const found = await (alwaysSearch ? firstHit : resolveTarget)(text, { language: this.language });
+        // a channel or playlist starts at its first video: the TV ignores it without one
+        const target = await withFirstVideo(found.target);
+        if (this.lastTarget.get(id) !== call) {
+            return false;
+        }
+        if (found.how !== 'target' || target !== found.target) {
+            const what = [found.title, found.channel].filter(Boolean).join(', ');
+            this.log.info(`${this.registry.find(id)?.name}: "${text.trim()}" -> ${found.how} ${target} (${what})`);
+        }
+        return this.playTarget(id, target, call);
     }
 
     private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
@@ -252,7 +312,10 @@ class YouTubeRemote extends utils.Adapter {
     private async execute(id: string, command: string, value: ioBroker.StateValue): Promise<boolean> {
         switch (command) {
             case 'youtube':
-                return typeof value === 'string' && value.trim() ? this.playTarget(id, value) : true;
+            case 'search':
+                return typeof value === 'string' && value.trim()
+                    ? this.playText(id, value, command === 'search')
+                    : true;
             case 'play':
             case 'pause':
             case 'next':
@@ -281,7 +344,7 @@ class YouTubeRemote extends utils.Adapter {
 
     /** Buttons and the target go back to their rest value, the others keep what was written */
     private async acknowledge(id: string, command: string, value: ioBroker.StateValue): Promise<void> {
-        if (command === 'youtube') {
+        if (command === 'youtube' || command === 'search') {
             await this.setStateAsync(id, '', true);
         } else if (['play', 'pause', 'next', 'prev'].includes(command)) {
             await this.setStateAsync(id, false, true);
@@ -309,6 +372,7 @@ class YouTubeRemote extends utils.Adapter {
             });
         };
         await state('youtube', 'Play video, playlist, channel or URL', 'string', 'text', true);
+        await state('search', 'Search and play the first hit', 'string', 'text', true);
         await state('play', 'Play', 'boolean', 'button.play', true);
         await state('pause', 'Pause', 'boolean', 'button.pause', true);
         await state('next', 'Next', 'boolean', 'button.next', true);

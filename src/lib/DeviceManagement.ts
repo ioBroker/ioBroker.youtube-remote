@@ -13,6 +13,7 @@ import {
 } from '@iobroker/dm-utils';
 import type { DialDevice } from '@iobroker/youtube-lounge';
 import type { StoredDevice } from '../types';
+import type { SearchResult } from './search';
 
 /** What the Device Manager needs from the adapter */
 export interface YouTubeService {
@@ -25,6 +26,8 @@ export interface YouTubeService {
     rename(id: string, name: string): Promise<void>;
     remove(id: string): Promise<void>;
     play(id: string, target: string): Promise<void>;
+    /** Videos, channels and playlists for the words, best first */
+    search(query: string): Promise<SearchResult[]>;
 }
 
 type Text = ioBroker.StringOrTranslated;
@@ -55,9 +58,14 @@ const T = {
     removeConfirm: { en: 'Remove this device?', de: 'Dieses Gerät entfernen?' },
     play: { en: 'Play', de: 'Abspielen' },
     playTarget: {
-        en: 'Video, playlist, channel (UC…) or YouTube URL',
-        de: 'Video, Playlist, Kanal (UC…) oder YouTube-URL',
+        en: 'Video, playlist, channel (UC… or @handle), YouTube URL or search words',
+        de: 'Video, Playlist, Kanal (UC… oder @Handle), YouTube-URL oder Suchbegriffe',
     },
+    searchPlay: { en: 'Search and play', de: 'Suchen und abspielen' },
+    searchWords: { en: 'Search words, e.g. Sailing Oceanaire', de: 'Suchbegriffe, z. B. Sailing Oceanaire' },
+    result: { en: 'What to play', de: 'Was abspielen' },
+    nothingFound: { en: 'YouTube found nothing', de: 'YouTube hat nichts gefunden' },
+    live: { en: 'live', de: 'live' },
     paired: { en: 'Paired devices', de: 'Gekoppelte Geräte' },
     discovered: { en: 'Found devices', de: 'Gefundene Geräte' },
     title: { en: 'Title', de: 'Titel' },
@@ -81,6 +89,26 @@ function duration(seconds: unknown): string {
     const [h, m, sec] = [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60];
     const two = (n: number): string => String(n).padStart(2, '0');
     return h ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
+}
+
+/** A line of the result list: "Title · Channel · 17:14", "Channel: Name (@handle)", "Playlist: Title · Channel" */
+function labelOf(result: SearchResult): ioBroker.Translated {
+    const join = (...parts: (string | undefined)[]): string => parts.filter(Boolean).join(' · ');
+    const both = (en: string, de: string): ioBroker.Translated => ({ en, de });
+    if (result.type === 'channel') {
+        const name = result.handle ? `${result.title} (${result.handle})` : result.title;
+        return both(`Channel: ${name}`, `Kanal: ${name}`);
+    }
+    if (result.type === 'playlist') {
+        return both(
+            `Playlist: ${join(result.title, result.channel)}`,
+            `Playlist: ${join(result.title, result.channel)}`,
+        );
+    }
+    return both(
+        join(result.title, result.channel, result.live ? T.live.en : result.duration ? duration(result.duration) : ''),
+        join(result.title, result.channel, result.live ? T.live.de : result.duration ? duration(result.duration) : ''),
+    );
 }
 
 function withError(text: Text, error: unknown): Text {
@@ -155,6 +183,12 @@ export class YouTubeDeviceManagement extends DeviceManagement {
             hasDetails: true,
             actions: [
                 { id: 'play', icon: 'play', description: T.play, handler: (id, ctx) => this.play(id, ctx) },
+                {
+                    id: 'search',
+                    icon: 'search',
+                    description: T.searchPlay,
+                    handler: (id, ctx) => this.searchAndPlay(id, ctx),
+                },
                 { id: 'rename', icon: 'rename', description: T.rename, handler: (id, ctx) => this.rename(id, ctx) },
                 {
                     id: 'delete',
@@ -358,6 +392,52 @@ export class YouTubeDeviceManagement extends DeviceManagement {
         if (data?.target) {
             try {
                 await this.service.play(id, String(data.target));
+            } catch (error) {
+                await context.showMessage(withError(T.failed, error));
+            }
+        }
+        return { refresh: 'none' };
+    }
+
+    /** Ask for words, show what YouTube finds, play the chosen one */
+    private async searchAndPlay(id: string, context: ActionContext): Promise<DeviceRefreshResponse<string>> {
+        const words = await context.showForm(
+            { type: 'panel', items: { query: { type: 'text', label: T.searchWords, xs: 12 } } },
+            { title: T.searchPlay, buttons: ['cancel', 'apply'] },
+        );
+        const query = String(words?.query ?? '').trim();
+        if (!query) {
+            return { refresh: 'none' };
+        }
+        let results: SearchResult[];
+        try {
+            results = await this.service.search(query);
+        } catch (error) {
+            await context.showMessage(withError(T.failed, error));
+            return { refresh: 'none' };
+        }
+        if (!results.length) {
+            await context.showMessage(T.nothingFound);
+            return { refresh: 'none' };
+        }
+        const choice = await context.showForm(
+            {
+                type: 'panel',
+                items: {
+                    target: {
+                        type: 'select',
+                        label: T.result,
+                        options: results.map(result => ({ label: labelOf(result), value: result.id })),
+                        noTranslation: true,
+                        xs: 12,
+                    },
+                },
+            },
+            { title: T.searchPlay, buttons: ['cancel', 'apply'], data: { target: results[0]!.id }, maxWidth: 'md' },
+        );
+        if (choice?.target) {
+            try {
+                await this.service.play(id, String(choice.target));
             } catch (error) {
                 await context.showMessage(withError(T.failed, error));
             }
