@@ -88,7 +88,7 @@ stored encrypted.
 -->
 
 ## Changelog
-### **WORK IN PROGRESS**
+### 0.2.0 (2026-11-20)
 
 - (@GermanBluefox) Search YouTube by keywords: the message `search` lists videos, channels and playlists, the state `search` plays the first hit, and the device card has "Search and play"
 - (@GermanBluefox) `youtube` takes handles (`@name`, `youtube.com/@name`) and plays the channel; other words play the first hit found

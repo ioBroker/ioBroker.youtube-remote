@@ -1,6 +1,6 @@
 {
   "name": "iobroker.youtube-remote",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Control the YouTube app of TVs, Android TV, Fire TV and consoles: play videos, playlists and channels, follow what plays",
   "author": {
     "name": "bluefox",
