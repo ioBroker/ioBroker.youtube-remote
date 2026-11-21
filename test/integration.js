@@ -31,6 +31,22 @@ tests.integration(path.join(__dirname, '..'), {
                 const answer = await send(harness, 'search', { query: ' ' });
                 assert.equal(answer.query, '');
                 assert.match(answer.error, /nothing to search/);
+                assert.equal(answer.reason, 'BAD_REQUEST');
+            });
+
+            // the commands of the shared catalog, without a paired device
+            it('answers getPlayers and play', async () => {
+                assert.deepEqual(await send(harness, 'getPlayers', {}), { players: [] });
+                const answer = await send(harness, 'play', { uri: 'dQw4w9WgXcQ', device: 'TV' });
+                assert.equal(answer.reason, 'DEVICE_NOT_FOUND');
+                assert.deepEqual(answer.devices, []);
+                const help = await send(harness, 'help', {});
+                assert.ok(help.commands.some(c => c.command === 'play' && c.write && c.standard === 'media.play'));
+            });
+
+            it('answers an unknown command with an error', async () => {
+                const answer = await send(harness, 'unknownCommand', {});
+                assert.equal(answer.reason, 'NOT_SUPPORTED');
             });
         });
     },

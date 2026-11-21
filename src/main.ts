@@ -9,6 +9,7 @@ import {
     discoverDialDevices,
     parseYouTubeTarget,
 } from '@iobroker/youtube-lounge';
+import { catalogError, catalogItems, findPlayer, searchRequestOf } from './lib/catalog';
 import { YouTubeDeviceManagement, type YouTubeService } from './lib/DeviceManagement';
 import { getScreenOfPairingCode, launchYouTubeWithPairingCode, readYouTubeApp } from './lib/dialPairing';
 import { COMMANDS, HELP } from './lib/help';
@@ -31,6 +32,8 @@ const SCREEN_WAIT = 30_000;
 const APP_WAIT = 30_000;
 /** The same for player commands */
 const COMMAND_WAIT = 5_000;
+/** The message play answers {ok, pending} if the app takes longer (rule 9 of the shared catalog), in ms */
+const PLAY_ANSWER_WAIT = 15_000;
 
 class YouTubeRemote extends utils.Adapter {
     private registry!: Registry;
@@ -65,37 +68,113 @@ class YouTubeRemote extends utils.Adapter {
         await this.subscribeStatesAsync('*');
     }
 
-    /** `help` and `search`: the Device Manager answers its `dm:` commands itself */
+    /**
+     * `help`, `search`, `getPlayers` and `play`: the Device Manager answers its `dm:` commands itself. search, play
+     * and getPlayers follow the shared catalog of ioBroker.assistant (media.search, media.play, media.getPlayers).
+     */
     private onMessage(obj: ioBroker.Message): void {
-        if (!obj?.callback) {
+        if (!obj?.command || obj.command.startsWith('dm:')) {
             return;
         }
-        if (obj.command === 'help') {
+        const reply = (answer: Record<string, unknown>): void => {
+            if (obj.callback) {
+                this.sendTo(obj.from, obj.command, answer, obj.callback);
+            }
+        };
+        if (obj.command === 'play') {
+            // has an effect: also without a callback
+            this.playMessage(obj.message).then(reply, (e: unknown) => {
+                const answer = catalogError(e);
+                this.log.warn(`play from ${obj.from}: ${answer.error}`);
+                reply(answer);
+            });
+        } else if (!obj.callback) {
+            // the others only answer
+        } else if (obj.command === 'help') {
             // A description of the adapter and its states for AI agents and script authors
-            this.sendTo(obj.from, obj.command, { help: HELP, commands: COMMANDS }, obj.callback);
+            reply({ help: HELP, commands: COMMANDS });
         } else if (obj.command === 'search') {
-            // "Sailing Oceanaire" or {query, type, limit}
-            const message = (typeof obj.message === 'string' ? { query: obj.message } : (obj.message ?? {})) as {
-                query?: string;
-                type?: SearchType;
-                limit?: number;
-            };
-            const query = String(message.query ?? '').trim();
-            this.search(query, message.type, message.limit).then(
-                results => this.sendTo(obj.from, obj.command, { query, results }, obj.callback),
-                (e: unknown) =>
-                    this.sendTo(
-                        obj.from,
-                        obj.command,
-                        { query, error: e instanceof Error ? e.message : String(e) },
-                        obj.callback,
-                    ),
+            // "Sailing Oceanaire" or {query, type, limit}, also {title, artist, album, offset} of the catalog
+            const { query, type, limit, offset } = searchRequestOf(obj.message);
+            this.search(query, type, Math.min(MAX_RESULTS, offset + limit)).then(
+                found => {
+                    const results = found.slice(offset);
+                    reply({ query, results, items: catalogItems(results) });
+                },
+                (e: unknown) => reply({ query, ...catalogError(e) }),
             );
+        } else if (obj.command === 'getPlayers') {
+            this.players().then(
+                players => reply({ players }),
+                (e: unknown) => reply(catalogError(e)),
+            );
+        } else {
+            reply({ error: `Unknown command ${obj.command}`, reason: 'NOT_SUPPORTED' });
         }
     }
 
     private search(query: string, type?: SearchType, limit?: number): Promise<SearchResult[]> {
         return searchYouTube(query, { type, limit, language: this.language });
+    }
+
+    /** media.getPlayers: the paired devices, with the room they are in; active = the YouTube app is open */
+    private async players(): Promise<{ id: string; name: string; room?: string; active: boolean; kinds: string[] }[]> {
+        const rooms = await this.getForeignObjectsAsync('enum.rooms.*', 'enum');
+        const roomOf = (id: string): string | undefined => {
+            const full = `${this.namespace}.${id}`;
+            const room = Object.values(rooms).find(r =>
+                r?.common?.members?.some(m => m === full || m.startsWith(`${full}.`)),
+            );
+            const name = room?.common?.name;
+            return typeof name === 'object' && name ? (name[this.language ?? 'en'] ?? name.en) : name;
+        };
+        return this.registry.devices.map(d => {
+            const room = roomOf(d.id);
+            return {
+                id: d.id,
+                name: d.name,
+                ...(room ? { room } : {}),
+                active: !!this.sessions.get(d.id)?.screenOnline,
+                kinds: ['video'],
+            };
+        });
+    }
+
+    /**
+     * media.play {uri?, device?}: plays like the state youtube (an ID, URL, handle or words) on the device, without
+     * uri it resumes. Answers when the TV took it; if the YouTube app takes longer, {ok, pending} and it goes on.
+     */
+    private async playMessage(message: unknown): Promise<Record<string, unknown>> {
+        const req = (typeof message === 'string' ? { uri: message } : (message ?? {})) as Record<string, unknown>;
+        const device = findPlayer(
+            this.registry.devices,
+            req.device ?? req.deviceId ?? req.deviceName,
+            id => !!this.sessions.get(id)?.screenOnline,
+        );
+        if ('error' in device) {
+            return device;
+        }
+        const uri = typeof req.uri === 'string' ? req.uri.trim() : '';
+        const job = uri
+            ? this.playText(device.id, uri)
+            : this.send(device.id, lounge => lounge.play({ kind: 'command', command: 'play' }), COMMAND_WAIT);
+        let timer: ioBroker.Timeout | undefined;
+        const pending = new Promise<'pending'>(resolve => {
+            timer = this.setTimeout(() => resolve('pending'), PLAY_ANSWER_WAIT);
+        });
+        const outcome = await Promise.race([job, pending]).finally(() => this.clearTimeout(timer));
+        const answer = { device: { id: device.id, name: device.name } };
+        if (outcome === 'pending') {
+            void job.then(
+                done => done || this.log.info(`play on ${device.name}: replaced by a newer command`),
+                (e: unknown) => this.log.warn(`play on ${device.name}: ${catalogError(e).error}`),
+            );
+            return { ok: true, pending: true, ...answer };
+        }
+        if (!outcome) {
+            return { error: 'A newer command for the device replaced it', reason: 'REPLACED', ...answer };
+        }
+        return { ok: true, ...answer };
     }
 
     private onUnload(callback: () => void): void {

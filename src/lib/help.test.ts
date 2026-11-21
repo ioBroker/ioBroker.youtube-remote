@@ -65,6 +65,16 @@ describe('help', () => {
         }
     });
 
+    it('marks the commands of the shared catalog (ioBroker.assistant HELP.md)', () => {
+        const marked = Object.fromEntries(COMMANDS.filter(c => c.standard).map(c => [c.command, c.standard]));
+        assert.deepEqual(marked, { search: 'media.search', getPlayers: 'media.getPlayers', play: 'media.play' });
+        for (const c of COMMANDS.filter(c => c.standard)) {
+            assert.ok(HELP.includes(`- ${c.command}`), c.command);
+            assert.ok(HELP.includes(c.standard!), c.standard);
+        }
+        assert.equal(COMMANDS.find(c => c.command === 'play')?.write, true);
+    });
+
     it('keeps the lines short', () => {
         for (const line of HELP.split('\n')) {
             assert.ok(line.length <= 120, line);

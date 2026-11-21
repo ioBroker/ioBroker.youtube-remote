@@ -4,10 +4,15 @@
  * `execute` in main.ts and with the Device Manager (dm-utils answers the `dm:` commands itself).
  */
 
-/** The commands the instance answers. write: true if the command has an effect (pairs, removes, plays, writes) */
-export const COMMANDS: { command: string; write: boolean }[] = [
+/**
+ * The commands the instance answers. write: true if the command has an effect (pairs, removes, plays, writes);
+ * standard: the command of the shared catalog of commands for adapter families (ioBroker.assistant HELP.md)
+ */
+export const COMMANDS: { command: string; write: boolean; standard?: string }[] = [
     { command: 'help', write: false },
-    { command: 'search', write: false },
+    { command: 'search', write: false, standard: 'media.search' },
+    { command: 'getPlayers', write: false, standard: 'media.getPlayers' },
+    { command: 'play', write: true, standard: 'media.play' },
     { command: 'dm:instanceInfo', write: false },
     { command: 'dm:loadDevices', write: false },
     { command: 'dm:deviceInfo', write: false },
@@ -24,19 +29,35 @@ export const COMMANDS: { command: string; write: boolean }[] = [
 export const HELP = `ioBroker.youtube-remote: controls the YouTube app of TVs, Android TV / Google TV, Fire TV and game consoles
 (every device whose YouTube app offers "Link with TV"; the user pairs them in the tab Devices of the settings).
 An agent can search YouTube, play a video, a playlist or the uploads of a channel on a TV, pause, resume, skip,
-jump, set the volume of the YouTube player, and tell what plays. Searching is a message, everything else is done
-by writing states; the other messages only serve the Device Manager of the admin.
+jump, set the volume of the YouTube player, and tell what plays. Searching, listing the devices and playing are
+messages, the rest is done by writing states; the dm: messages only serve the Device Manager of the admin.
+search, getPlayers and play follow the shared catalog of commands for media players (media.search,
+media.getPlayers, media.play; marked with standard in the commands list of this answer).
 
-Commands (sendTo youtube-remote.0):
-- help: this text; answer {help, commands: [{command, write}]}.
-- search: find videos, channels and playlists by keywords; reads only, plays nothing. Message {query, type, limit}
-  or just the query as a string. type: all (default, the mix of the YouTube results page), video, channel or
-  playlist; limit 1-20 (default 10). Answer {query, results} or {query, error}. Results are ordered as YouTube
-  ranks them, each {type, id, title, channel, channelId, duration (s, videos; 0 = live), live, views, published,
-  videos (count of channels and playlists), handle, subscribers (channels), thumbnail}; fields YouTube does not
-  show are left out, the texts are in the language of the system. id is what to write to youtube: a video ID,
-  PL... (a playlist) or UC... (a channel: plays its uploads, newest first). No API key; uses the undocumented API
-  of the YouTube web page, so it can fail (error) or miss fields when YouTube changes it.
+Commands (sendTo youtube-remote.0; errors answer {error, reason?}):
+- help: this text; answer {help, commands: [{command, write, standard?}]}.
+- search: find videos, channels and playlists by keywords; reads only, plays nothing. Message {query, title?,
+  artist?, album?, type, limit, offset?} or just the query as a string; query, title, artist and album are searched
+  together. type: all (default, the mix of the YouTube results page), video (also track, song), channel (also
+  artist) or playlist (also album); several different or other types search all. limit 1-20 (default 10), offset
+  skips the first results (at most 20 in all). Answer {query, results, items} or {query, error, reason}. Results
+  are ordered as YouTube ranks them, each {type, id, title, channel, channelId, duration (s, videos; 0 = live),
+  live, views, published, videos (count of channels and playlists), handle, subscribers (channels), thumbnail};
+  fields YouTube does not show are left out, the texts are in the language of the system. items: the same in the
+  form of the catalog, {type, uri, id, name, artists?: [channel], durationSec?, live?, image?}. id (= uri) is what
+  to write to youtube or give to play: a video ID, PL... (a playlist) or UC... (a channel: plays its uploads,
+  newest first). No API key; uses the undocumented API of the YouTube web page, so it can fail (error) or miss
+  fields when YouTube changes it.
+- getPlayers: the paired devices, {players: [{id, name, room?, active, kinds: ["video"]}]}; id = <device> of the
+  states, room = the ioBroker room of the device object, active = the YouTube app of the device is open.
+- play {uri?, device?} (write): plays uri on the device like the state youtube (a video ID, PL..., UC..., a URL, a
+  handle or other words: then the first hit), without uri it resumes. device: name or id of a device (getPlayers);
+  without it the only device, or the only one whose YouTube app is open. Answers {ok: true, device: {id, name}}
+  when the TV took the command (sent, not yet playing), or after 15 s {ok: true, pending: true, device} while it
+  still waits for the YouTube app (up to 30 s; a failure then is only logged). Errors: reason DEVICE_NOT_FOUND
+  (with devices: the names), AMBIGUOUS (with candidates), NOT_CONNECTED (the YouTube app did not come), NOT_FOUND
+  (YouTube found nothing for the words), REPLACED (a newer command for the device came first). offset,
+  positionSec and shuffle of the catalog are not supported and ignored.
 - dm:instanceInfo, dm:loadDevices, dm:deviceInfo, dm:deviceStatus, dm:deviceDetails, dm:deviceControlState,
   dm:deviceLoadProgress (read) and dm:instanceAction, dm:deviceAction, dm:deviceControl, dm:actionProgress
   (search, pair, rename, remove, play, control): the Device Manager of the admin, for the settings, not for agents.
@@ -82,7 +103,8 @@ How to talk to the user:
   plays the uploads, newest first), a playlist if they ask for one, else the first video. If the hits do not
   clearly fit, list two or three (title, channel, length as m:ss) and ask. Say what you picked when you play it:
   "Playing <title> from <channel> on <device>". Write the id of the result to youtube.
-- Play, pause and change the volume only on the user's request; loud (volume above about 50) only when asked.
+- Play (state youtube, search or the message play), pause and change the volume only on the user's request; loud
+  (volume above about 50) only when asked.
 - If connected is false, the YouTube app is not open (the TV may be off): say so; this adapter cannot switch the TV
   on. After writing youtube or search, check that it was acknowledged (up to 30 s): that means sent, not playing.
   Then check that videoId and title changed (a few seconds) before saying it plays; if they did not, say so. If it

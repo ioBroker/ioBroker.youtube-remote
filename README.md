@@ -75,6 +75,25 @@ first. On a failure the answer is `{ query, error }`. The texts (views, publishe
 The search uses the API of the YouTube web page, without an API key and without a quota. Like the Lounge API it is not
 documented by Google and may change.
 
+`search`, `getPlayers` and `play` follow the shared catalog of commands for media players of ioBroker.assistant
+(`media.search`, `media.getPlayers`, `media.play`; `help` marks them with `standard`), so a client can treat every
+player alike:
+
+- `search` also takes `title`, `artist` and `album` (searched together with `query`), the types `track`/`song`
+  (= `video`), `artist` (= `channel`) and `album` (= `playlist`) and `offset`, and answers `items:
+  [{type, uri, id, name, artists, durationSec, image}]` next to `results`.
+- `getPlayers` answers `{ players: [{ id, name, room, active, kinds: ['video'] }] }`: `active` = the YouTube app is
+  open, `room` = the room of the device object.
+- `play { uri, device }` plays like the state `youtube` (without `uri` it resumes) and answers `{ ok: true, device }`
+  when the TV took the command, or `{ ok: true, pending: true, device }` if the YouTube app takes longer than 15 s; an
+  error answers `{ error, reason }` (`DEVICE_NOT_FOUND`, `AMBIGUOUS`, `NOT_CONNECTED`, `NOT_FOUND`, `REPLACED`).
+
+```js
+sendTo('youtube-remote.0', 'play', { uri: 'UCbmF2AHnpQsogOLW-MxBiJg', device: 'Living room' }, answer => {
+    log(answer.error ? `${answer.reason}: ${answer.error}` : `sent to ${answer.device.name}`);
+});
+```
+
 ## Note
 
 Commands and what plays go over the YouTube Lounge API of Google ("Link with TV") with
@@ -88,6 +107,10 @@ stored encrypted.
 -->
 
 ## Changelog
+### **WORK IN PROGRESS**
+
+- (@GermanBluefox) Added the standard commands of the shared catalog: media.search (`search` takes `title`, `artist`, `album`, `offset` and answers `items`), media.getPlayers (`getPlayers`) and media.play (`play {uri, device}`, answers when the TV took it); an unknown message answers with an error
+
 ### 0.2.1 (2026-11-23)
 
 - (@GermanBluefox) **Add** pairs devices that report no YouTube screen over DIAL, e.g. Fire TV: the adapter starts the YouTube app with a pairing code, as the YouTube app of a phone does
