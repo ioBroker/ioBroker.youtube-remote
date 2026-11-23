@@ -1,15 +1,16 @@
 import * as utils from '@iobroker/adapter-core';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import {
     type DialDevice,
+    type LoungeScreen,
     type NowPlaying,
     YouTubeLounge,
     discoverDialDevices,
-    getYouTubeScreenId,
-    launchYouTubeOverDial,
     parseYouTubeTarget,
 } from '@iobroker/youtube-lounge';
 import { YouTubeDeviceManagement, type YouTubeService } from './lib/DeviceManagement';
+import { getScreenOfPairingCode, launchYouTubeWithPairingCode, readYouTubeApp } from './lib/dialPairing';
 import { COMMANDS, HELP } from './lib/help';
 import { MEDIA_STATES, PLAYER_STATES, type VideoInfo, lookUpVideo, mediaStateOf } from './lib/playerStates';
 import { Registry } from './lib/registry';
@@ -24,8 +25,8 @@ import {
 } from './lib/search';
 import type { StoredDevice } from './types';
 
-/** How long adding a found device waits for the YouTube app to report its screen, in ms */
-const SCREEN_WAIT = 15_000;
+/** How long adding a found device waits for the YouTube app to start and report its screen, in ms */
+const SCREEN_WAIT = 30_000;
 /** How long a video waits for the YouTube app to join the lounge, e.g. while the TV starts, in ms */
 const APP_WAIT = 30_000;
 /** The same for player commands */
@@ -113,7 +114,7 @@ class YouTubeRemote extends utils.Adapter {
                 return this.foundDevices;
             },
             addFound: found => this.addFound(found),
-            pairWithCode: (code, name) => this.pairWithCode(code, name),
+            pairWithCode: (code, name, udn) => this.pairWithCode(code, name, udn),
             rename: async (id, name) => {
                 const device = this.registry.find(id);
                 if (device) {
@@ -137,28 +138,61 @@ class YouTubeRemote extends utils.Adapter {
 
     /** Pair with the screen ID the found device reports; the YouTube app is started over DIAL if it has to */
     private async addFound(found: DialDevice): Promise<StoredDevice> {
-        let screenId = await getYouTubeScreenId(found.appUrl);
-        if (!screenId && (await launchYouTubeOverDial(found.appUrl))) {
-            const until = Date.now() + SCREEN_WAIT;
-            while (!screenId && Date.now() < until) {
-                await new Promise<void>(resolve => this.setTimeout(() => resolve(), 1500));
-                screenId = await getYouTubeScreenId(found.appUrl);
-            }
-        }
-        if (!screenId) {
-            throw new Error(
-                'The YouTube app does not report its screen. Open YouTube on the device or pair with the TV code',
-            );
-        }
+        const label = `${found.name || found.ip} (${found.ip})`;
         const lounge = new YouTubeLounge({ name: 'ioBroker', deviceId: this.registry.remoteId });
-        const screen = await lounge.pairWithScreenId(screenId);
+        const app = await readYouTubeApp(found.appUrl);
+        this.log.info(
+            `${label}: YouTube over DIAL: HTTP ${app.status || 'no answer'}, state "${app.state}", ${app.screenId ? 'with' : 'without'} screen ID`,
+        );
+        const screen = app.screenId
+            ? await lounge.pairWithScreenId(app.screenId)
+            : await this.pairOverDial(found, label, lounge);
         return this.addDevice({ ...screen, name: found.name || found.ip, udn: found.udn }, lounge);
     }
 
-    private async pairWithCode(code: string, name: string): Promise<StoredDevice> {
+    /**
+     * Start the YouTube app with a pairing code, as the YouTube phone app does: the app registers the code at Google
+     * (Fire TV reports no screen ID over DIAL), or it reports its screen ID once it runs.
+     */
+    private async pairOverDial(found: DialDevice, label: string, lounge: YouTubeLounge): Promise<LoungeScreen> {
+        const pairingCode = randomUUID();
+        const status = await launchYouTubeWithPairingCode(found.appUrl, pairingCode);
+        this.log.info(`${label}: start of YouTube with a pairing code: HTTP ${status || 'no answer'}`);
+        if (status >= 300) {
+            throw new Error(
+                `The TV refused to start YouTube over the network (HTTP ${status}). Open YouTube on the TV and add it again, or pair with the TV code`,
+            );
+        }
+        // no answer in time: TVs that answer only once the app runs, the app may come all the same
+        const until = Date.now() + SCREEN_WAIT;
+        while (Date.now() < until) {
+            await new Promise<void>(resolve => this.setTimeout(() => resolve(), 1500));
+            const screen = await getScreenOfPairingCode(pairingCode);
+            if (screen) {
+                this.log.info(`${label}: the YouTube app registered the pairing code`);
+                lounge.useScreen({ screenId: screen.screenId, loungeToken: screen.loungeToken });
+                return lounge.screen!;
+            }
+            const app = await readYouTubeApp(found.appUrl);
+            if (app.screenId) {
+                this.log.info(`${label}: the YouTube app reports its screen ID`);
+                return lounge.pairWithScreenId(app.screenId);
+            }
+        }
+        this.log.warn(
+            `${label}: the YouTube app neither registered the pairing code nor reported its screen in ${SCREEN_WAIT / 1000} s`,
+        );
+        throw new Error('The YouTube app of the TV did not report its screen. Pair with the TV code');
+    }
+
+    /** Pair with the code the YouTube app shows; `udn` hides the found device it belongs to */
+    private async pairWithCode(code: string, name: string, udn?: string): Promise<StoredDevice> {
         const lounge = new YouTubeLounge({ name: 'ioBroker', deviceId: this.registry.remoteId });
         const screen = await lounge.pairWithCode(code);
-        return this.addDevice({ screenId: screen.screenId, loungeToken: screen.loungeToken, name }, lounge);
+        return this.addDevice(
+            { screenId: screen.screenId, loungeToken: screen.loungeToken, name, ...(udn ? { udn } : {}) },
+            lounge,
+        );
     }
 
     private async addDevice(device: Omit<StoredDevice, 'id'>, lounge: YouTubeLounge): Promise<StoredDevice> {

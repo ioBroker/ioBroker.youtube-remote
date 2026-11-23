@@ -9,9 +9,9 @@ offers "Link with TV": plays videos, playlists and channels, finds them by keywo
 
 In the tab **Devices** of the settings:
 
-- **Search** finds devices with the YouTube app in the network (DIAL). **Add** pairs a found device; it reports
-  its YouTube screen mostly only while the app runs, so the adapter tries to start it - if that does not work, open
-  YouTube on the device once.
+- **Search** finds devices with the YouTube app in the network (DIAL). **Add** pairs a found device: it reads the
+  YouTube screen the device reports, or starts the YouTube app with a pairing code, as the YouTube app of a phone
+  does when it casts (Fire TV reports no screen). If that fails, the dialog asks for the TV code of the device.
 - **Pair with TV code** works for every device: the YouTube app shows the code under **Settings** > **Link with TV code**.
 
 The card of a device shows whether the YouTube app is open, what plays (title, channel) and has buttons for previous,
@@ -88,6 +88,11 @@ stored encrypted.
 -->
 
 ## Changelog
+### **WORK IN PROGRESS**
+
+- (@GermanBluefox) **Add** pairs devices that report no YouTube screen over DIAL, e.g. Fire TV: the adapter starts the YouTube app with a pairing code, as the YouTube app of a phone does
+- (@GermanBluefox) If **Add** fails, the dialog asks for the TV code of the device; the log tells what the device answered
+
 ### 0.2.0 (2026-11-20)
 
 - (@GermanBluefox) Search YouTube by keywords: the message `search` lists videos, channels and playlists, the state `search` plays the first hit, and the device card has "Search and play"

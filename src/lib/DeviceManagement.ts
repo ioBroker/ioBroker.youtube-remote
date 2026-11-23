@@ -22,7 +22,8 @@ export interface YouTubeService {
     found(): DialDevice[];
     discover(): Promise<DialDevice[]>;
     addFound(device: DialDevice, name: string): Promise<StoredDevice>;
-    pairWithCode(code: string, name: string): Promise<StoredDevice>;
+    /** `udn`: the found device the code belongs to, to hide it from the found devices */
+    pairWithCode(code: string, name: string, udn?: string): Promise<StoredDevice>;
     rename(id: string, name: string): Promise<void>;
     remove(id: string): Promise<void>;
     play(id: string, target: string): Promise<void>;
@@ -47,6 +48,10 @@ const T = {
     code: { en: 'TV code', de: 'TV-Code' },
     name: { en: 'Name', de: 'Name' },
     add: { en: 'Add', de: 'Hinzufügen' },
+    addFailedCode: {
+        en: 'Pair it with the TV code instead: the YouTube app on the device shows it under Settings > Link with TV code.',
+        de: 'Kopple es stattdessen mit dem TV-Code: Die YouTube-App auf dem Gerät zeigt ihn unter Einstellungen > Mit TV-Code verknüpfen.',
+    },
     addHint: {
         en: 'Switch the device on. If it cannot be added, open YouTube on it once or pair with the TV code.',
         de: 'Schalte das Gerät ein. Klappt das Hinzufügen nicht, öffne YouTube einmal darauf oder kopple mit dem TV-Code.',
@@ -216,7 +221,7 @@ export class YouTubeDeviceManagement extends DeviceManagement {
                         title: T.add,
                         variant: 'contained',
                         description: T.addHint,
-                        timeout: 60000,
+                        timeout: 90000,
                         handler: (id, ctx) => this.addFound(id, ctx),
                     },
                 ],
@@ -375,11 +380,38 @@ export class YouTubeDeviceManagement extends DeviceManagement {
         if (!found) {
             return { refresh: 'devices' };
         }
+        const name = found.name || found.ip;
         try {
-            await this.service.addFound(found, found.name || found.ip);
+            await this.service.addFound(found, name);
             await context.showMessage(T.added);
+            return { refresh: 'devices' };
         } catch (error) {
-            await context.showMessage(withError(T.failed, error));
+            // Fire TV and others: the TV code always works, so ask for it right here
+            const data = await context.showForm(
+                {
+                    type: 'panel',
+                    items: {
+                        _error: { type: 'staticText', text: withError(T.failed, error) as unknown as string, xs: 12 },
+                        _help: { type: 'staticText', text: T.addFailedCode as unknown as string, xs: 12 },
+                        code: {
+                            type: 'text',
+                            label: T.code,
+                            validator: '!!data.code',
+                            validatorNoSaveOnError: true,
+                            xs: 12,
+                        },
+                    },
+                },
+                { title: T.pairCode, buttons: ['cancel', 'apply'] },
+            );
+            if (data?.code) {
+                try {
+                    await this.service.pairWithCode(String(data.code), name, found.udn);
+                    await context.showMessage(T.added);
+                } catch (codeError) {
+                    await context.showMessage(withError(T.failed, codeError));
+                }
+            }
         }
         return { refresh: 'devices' };
     }
