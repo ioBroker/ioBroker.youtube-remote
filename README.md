@@ -88,7 +88,7 @@ stored encrypted.
 -->
 
 ## Changelog
-### **WORK IN PROGRESS**
+### 0.2.1 (2026-11-23)
 
 - (@GermanBluefox) **Add** pairs devices that report no YouTube screen over DIAL, e.g. Fire TV: the adapter starts the YouTube app with a pairing code, as the YouTube app of a phone does
 - (@GermanBluefox) If **Add** fails, the dialog asks for the TV code of the device; the log tells what the device answered

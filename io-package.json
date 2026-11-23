@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "youtube-remote",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "news": {
+      "0.2.1": {
+        "en": "**Add** pairs devices that report no YouTube screen over DIAL, e.g. Fire TV: the adapter starts the YouTube app with a pairing code, as the YouTube app of a phone does\nIf **Add** fails, the dialog asks for the TV code of the device; the log tells what the device answered",
+        "de": "**Hinzufügen** koppelt Geräte, die über DIAL keinen YouTube-Bildschirm melden, z. B. Fire TV: Der Adapter startet die YouTube-App mit einem Pairing-Code, wie es die YouTube-App eines Handys tut\nSchlägt **Hinzufügen** fehl, fragt der Dialog nach dem TV-Code des Geräts; das Log zeigt, was das Gerät geantwortet hat",
+        "ru": "**Добавить** подключает устройства, которые не сообщают экран YouTube через DIAL, например Fire TV: адаптер запускает приложение YouTube с кодом сопряжения, как это делает приложение YouTube на телефоне\nЕсли **Добавить** не удаётся, диалог запрашивает TV-код устройства; в журнале видно, что ответило устройство",
+        "pt": "**Adicionar** emparelha dispositivos sem tela do YouTube via DIAL, por exemplo, Fire TV: o adaptador inicia o app YouTube com um código de pareamento, como faz o app de um celular\nSe **Adicionar** falhar, o diálogo pede o código de TV do aparelho; o log diz o que o aparelho respondeu",
+        "nl": "**Add** koppelt apparaten die melden dat er geen YouTube-scherm is via DIAL, bijvoorbeeld Fire TV: de adapter start de YouTube-app met een koppelingscode, zoals de YouTube-app van een telefoon dat doet\nAls **Add** mislukt, wordt in het dialoogvenster om de tv-code van het apparaat gevraagd; in het logboek staat wat het apparaat heeft geantwoord",
+        "fr": "**Ajouter** associe des appareils qui ne signalent aucun écran YouTube via DIAL, par exemple Fire TV : l'adaptateur lance l'application YouTube avec un code, comme le fait un téléphone\nSi **Ajouter** échoue, la boîte de dialogue demande le code TV de l'appareil ; le journal indique la réponse",
+        "it": "**Aggiungi** abbina i dispositivi che non visualizzano lo schermo di YouTube su DIAL, ad esempio Fire TV: l'adattatore avvia l'app YouTube con un codice\nSe **Add** fallisce, la finestra chiede il codice TV del dispositivo; il log dice a cosa ha risposto",
+        "es": "**Añad** empareja dispositivos que no ven la pantalla de YouTube por DIAL, p. ej. Fire TV: el adaptador inicia la aplicación YouTube con un código de emparejamiento, como hace un teléfono\nSi **Add** no funciona, el cuadro de diálogo pide el código de TV del dispositivo; el registro dice la respuesta",
+        "pl": "**Dodaj** łączy urządzenia, które nie zgłaszają ekranu YouTube przez DIAL, np. Fire TV: adapter uruchamia aplikację YouTube z kodem parowania, tak jak robi to aplikacja YouTube telefonu\nJeśli **Dodaj** nie powiedzie się, okno dialogowe poprosi o podanie kodu telewizyjnego urządzenia; dziennik informuje, na co urządzenie odpowiedziało",
+        "uk": "**Додати** підключає пристрої, які не повідомляють екран YouTube через DIAL, наприклад Fire TV: адаптер запускає додаток YouTube з кодом сполучення, як це робить додаток YouTube на телефоні\nЯкщо **Додати** не вдається, діалог запитує TV-код пристрою; у журналі видно, що відповів пристрій",
+        "zh-cn": "**添加**通过 DIAL 配对无法报告 YouTube 屏幕的设备，例如 Fire TV：适配器使用配对码启动 YouTube 应用程序，就像手机的 YouTube 应用程序一样\n如果 “添加” 失败，对话框会询问设备的电视代码；日志会显示设备回答了什么"
+      },
       "0.2.0": {
         "en": "Search YouTube by keywords: the message `search` lists videos, channels and playlists, the state `search` plays the first hit, and the device card has \"Search and play\"\n`youtube` takes handles (`@name`, `youtube.com/@name`) and plays the channel; other words play the first hit found\nA channel or a playlist without a video starts at its first video (the newest upload of a channel): the YouTube app of the TV ignored it before",
         "de": "YouTube nach Stichwörtern durchsuchen: die Nachricht `search` listet Videos, Kanäle und Playlists, der State `search` spielt den ersten Treffer ab, und die Gerätekarte hat „Suchen und abspielen“\n`youtube` nimmt Handles (`@name`, `youtube.com/@name`) und spielt den Kanal ab; andere Wörter spielen den ersten Treffer\nEin Kanal oder eine Playlist ohne Video startet mit dem ersten Video (beim Kanal dem neuesten Upload): die YouTube-App des Fernsehers hat sie vorher ignoriert",
