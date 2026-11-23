@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "youtube-remote",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "news": {
+      "0.3.0": {
+        "en": "Added the standard commands of the shared catalog: media.search (`search` takes `title`, `artist`, `album`, `offset` and answers `items`), media.getPlayers (`getPlayers`) and media.play (`play {uri, device}`, answers when the TV took it); an unknown message answers with an error",
+        "de": "Standardbefehle des gemeinsamen Katalogs hinzugefügt: media.search (`search` takes `title`, `artist`, `album`, `offset` and answers `items`), media.getPlayers (`getPlayers`) und media.play (`play {uri, device} `, antwortet, als der Fernseher es nahm); eine unbekannte Nachricht antwortet mit einem Fehler",
+        "ru": "Добавлены стандартные команды общего каталога: media.search (`search` принимает значения `title`, `art`, `album`, `offset` и отвечает `items`), media.getPlayers (`GetPlayers`) и media.play (`play {uri, device} `, ответы, когда телевизор снял его); неизвестное сообщение отвечает с ошибкой",
+        "pt": "Adicionados os comandos padrão do catálogo compartilhado: media.search (`search` usa `title`, `artist`, `album`, `offset` e responde `items`), media.getPlayers (`getPlayers`) e media.play (`play {uri, device} `, responde quando a TV o pegou); uma mensagem desconhecida responde com um erro",
+        "nl": "De standaardopdrachten van de gedeelde catalogus toegevoegd: media.search (voor `search` is `title`, `artist`, `album`, `offset` en antwoorden `items` nodig), Media.getPlayers (`GetPlayers`) en media.play (`play {uri, device} `, antwoorden toen de tv het opnam); een onbekend bericht beantwoordt met een foutmelding",
+        "fr": "Ajout des commandes standard du catalogue partagé : media.search (`search` prend `title`, `artist`, `album`, `offset` et répond à `items`), media.getPlayers (`getPlayers`) et media.play (`play {uri, device} `, répond quand le téléviseur l'a pris) ; un message inconnu répond par une erreur",
+        "it": "Aggiunti i comandi standard del catalogo condiviso: media.search (`search` accetta `title`, `artist`, `album`, `offset` e risponde `items`), media.getPlayers (`getPlayers`) e media.play (`play {uri, device} `, risponde quando la TV lo ha preso); un messaggio sconosciuto risponde con un errore",
+        "es": "Se han añadido los comandos estándar del catálogo compartido: media.search (`search` toma «título», «artista», «álbum», «offset» y responde a «objetos»), media.getPlayers (`getPlayers`) y media.play (`play {uri, device} `, responde cuando la televisión lo tomó); un mensaje desconocido responde con un error",
+        "pl": "Dodano standardowe polecenia udostępnionego katalogu: media.search (`search` bierze `tytuł`, `artyst`, `album`, `offset` i odpowiada `items`), media.getPlayers (`getPlayers`) i media.play (`play {uri, device} `, odpowiada, gdy telewizor go zabrał); nieznana wiadomość odpowiada błędem",
+        "uk": "Додані стандартні команди спільного каталогу: media.search (`search` приймає `title`, `artist`, `album`, `offset` і відповідає `items`), media.getPlayers (`getPlayers`) та media.play (`play {uri, device} `, відповідає, коли телевізор захопив його); невідоме повідомлення відповідає з помилкою",
+        "zh-cn": "添加了共享目录的标准命令：media.search（`search` 使用 `标题`、`艺术家'、`album`、`offset` 和回答 `items`）、Media.getPlayers（`getPlayers`）和 media.play（`play {uri，设备} `，电视接收时回答）；一条未知的消息以错误回答"
+      },
       "0.2.1": {
         "en": "**Add** pairs devices that report no YouTube screen over DIAL, e.g. Fire TV: the adapter starts the YouTube app with a pairing code, as the YouTube app of a phone does\nIf **Add** fails, the dialog asks for the TV code of the device; the log tells what the device answered",
         "de": "**Hinzufügen** koppelt Geräte, die über DIAL keinen YouTube-Bildschirm melden, z. B. Fire TV: Der Adapter startet die YouTube-App mit einem Pairing-Code, wie es die YouTube-App eines Handys tut\nSchlägt **Hinzufügen** fehl, fragt der Dialog nach dem TV-Code des Geräts; das Log zeigt, was das Gerät geantwortet hat",

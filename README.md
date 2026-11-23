@@ -107,7 +107,7 @@ stored encrypted.
 -->
 
 ## Changelog
-### **WORK IN PROGRESS**
+### 0.3.0 (2026-11-23)
 
 - (@GermanBluefox) Added the standard commands of the shared catalog: media.search (`search` takes `title`, `artist`, `album`, `offset` and answers `items`), media.getPlayers (`getPlayers`) and media.play (`play {uri, device}`, answers when the TV took it); an unknown message answers with an error
 
